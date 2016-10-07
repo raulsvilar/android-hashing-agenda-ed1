@@ -1,8 +1,12 @@
 package br.ufs.raulsvilar.agendahashing.hashing;
 
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.List;
+import android.content.Context;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.RandomAccessFile;
+
+import br.ufs.raulsvilar.agendahashing.R;
 
 /**
  * Created by raulsvilar on 05/10/16.
@@ -10,28 +14,74 @@ import java.util.List;
 
 public class HashingJava implements BaseHashing{
 
-    List<List<Byte>> hashTable;
+    private Context mContext;
+    private long maxRecordsInFile;
+    RandomAccessFile randomAccessFile;
 
-    long actualSize;
-    int tableSize;
+    public HashingJava(Context context) throws FileNotFoundException {
+        mContext = context;
+        randomAccessFile = new RandomAccessFile(
+                new File(mContext.getExternalFilesDir(null),
+                        mContext.getResources().getString(R.string.data_file)), "rw");
+    }
 
     @Override
-    public String hash(String s) {
+    public long hash(String s) {
+        long h = 0;
+        for (int i = 0; i < s.length(); i++)
+            h = h * (65599) + s.charAt(i);
+        return h % maxRecordsInFile;
+    }
+
+    @Override
+    public void add(String key, String value) {
+        //TODO: Adicionar a resolução de colisão
+        long index = hash(key);
         try {
-            MessageDigest.getInstance("MD5").digest(s.getBytes());
-        } catch (NoSuchAlgorithmException e) {
+            randomAccessFile.seek(index * Record.bufferSize);
+            Record record = new Record(key, value);
+            randomAccessFile.write(record.getBytes());
+        } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public Record getValue(String key) {
+        long index = hash(key);
+        Record record;
+        boolean canStop = false;
+        byte[] data = new byte[Record.bufferSize];
+        do {
+            try {
+                randomAccessFile.seek(index * Record.bufferSize);
+                randomAccessFile.read(data);
+                record = new Record(data);
+                if (record.getName() == null) {
+                    canStop = true;
+                } else if (record.getName().equals(key)) {
+                    canStop = true;
+                    //TODO: Implementar o endereçamento aberto linear
+                } else {
+
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        } while (canStop);
         return null;
     }
 
     @Override
-    public void add(String name, String number) {
+    public void delete(String key) {
 
     }
 
-    @Override
-    public void delete(String name) {
-
+    /**
+     * Define a quantidade de registros possíveis de serem armazenados baseado no tamanho do arquivo
+     * @param size Tamanho do arquivo em bytes
+     */
+    public void setSizeOfFile(long size) {
+        this.maxRecordsInFile = size / Record.bufferSize;
     }
 }

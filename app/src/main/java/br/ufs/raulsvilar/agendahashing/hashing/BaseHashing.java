@@ -11,18 +11,25 @@ interface BaseHashing {
      * @param s String para ser convertidada em hash
      * @return Hash
      */
-    String hash(String s);
+    long hash(String s);
 
     /**
      * Adiciona uma entrada na tabela hash
-     * @param name Nome do contato a ser armazenado, que é a chave na tabela
-     * @param number Número do contato a ser armazenado, que é o valor na tabela
+     * @param key Chave do valor a ser armazenado
+     * @param value Valor a ser armazenado
      */
-    void add(String name, String number);
+    void add(String key, String value);
+
+    /**
+     * Recupera um registro da tabela por meio da chave
+     * @param key Chave do item a ser recuperado
+     * @return Objeto com os dados armazenados
+     */
+    Record getValue(String key);
 
     /**
      * Remove uma entrada da tabela
-     * @param name Nome do contato que a ser removido
+     * @param key Chave do registro a ser removido
      */
-    void delete(String name);
+    void delete(String key);
 }

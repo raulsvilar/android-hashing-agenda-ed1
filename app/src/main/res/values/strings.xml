@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">AgendaHashing</string>
+    
+    <string name="data_file">database.data</string>
 </resources>
