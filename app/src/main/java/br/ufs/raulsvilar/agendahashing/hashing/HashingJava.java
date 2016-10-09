@@ -3,7 +3,7 @@ package br.ufs.raulsvilar.agendahashing.hashing;
 import android.content.Context;
 
 import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.RandomAccessFile;
 
 import br.ufs.raulsvilar.agendahashing.R;
@@ -14,15 +14,20 @@ import br.ufs.raulsvilar.agendahashing.R;
 
 public class HashingJava implements BaseHashing{
 
-    private Context mContext;
     private long maxRecordsInFile;
-    RandomAccessFile randomAccessFile;
+    private RandomAccessFile randomAccessFile;
 
-    public HashingJava(Context context) throws FileNotFoundException {
-        mContext = context;
-        randomAccessFile = new RandomAccessFile(
-                new File(mContext.getExternalFilesDir(null),
-                        mContext.getResources().getString(R.string.data_file)), "rw");
+    /**
+     * Controla o acesso, inserção e remoção de registros em um arquivo por meio de uma tabela hash.
+     * @param file arquivo onde os registros serão armazenados, caso o arquivo não exista ele será
+     *             criado.
+     * @param sizeOfFile Caso o arquivo não exista o mesmo será criado com o tamanho aqui fornecido.
+     * @throws IOException
+     */
+    public HashingJava(File file, long sizeOfFile) throws IOException {
+        maxRecordsInFile = sizeOfFile/Record.bufferSize;
+        randomAccessFile = new RandomAccessFile(file, "rwd");
+        randomAccessFile.setLength(sizeOfFile);
     }
 
     @Override
@@ -35,21 +40,31 @@ public class HashingJava implements BaseHashing{
 
     @Override
     public void add(String key, String value) {
-        //TODO: Adicionar a resolução de colisão
+        boolean canStop = false;
+        byte[] data = new byte[Record.bufferSize];
+        Record record;
         long index = hash(key);
-        try {
-            randomAccessFile.seek(index * Record.bufferSize);
-            Record record = new Record(key, value);
-            randomAccessFile.write(record.getBytes());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        do {
+            try {
+                randomAccessFile.seek(index * Record.bufferSize);
+                randomAccessFile.read(data);
+                record = new Record(data);
+                if (record.getName() == null ||
+                        (record.getName() != null && record.isDeleted())) {
+                    record = new Record(key, value);
+                    randomAccessFile.write(record.getBytes());
+                    canStop = true;
+                } else index = (index + 1) % maxRecordsInFile;
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        } while (canStop);
     }
 
     @Override
     public Record getValue(String key) {
         long index = hash(key);
-        Record record;
+        Record record = null;
         boolean canStop = false;
         byte[] data = new byte[Record.bufferSize];
         do {
@@ -57,31 +72,33 @@ public class HashingJava implements BaseHashing{
                 randomAccessFile.seek(index * Record.bufferSize);
                 randomAccessFile.read(data);
                 record = new Record(data);
-                if (record.getName() == null) {
+                if (record.getName() != null && record.getName().equals(key)) {
                     canStop = true;
-                } else if (record.getName().equals(key)) {
+                } else if (record.getName() == null) {
+                    record = null;
                     canStop = true;
-                    //TODO: Implementar o endereçamento aberto linear
-                } else {
-
-                }
+                } else index = (index + 1) % maxRecordsInFile;
             } catch (Exception e) {
                 e.printStackTrace();
             }
         } while (canStop);
-        return null;
+        return record;
     }
 
     @Override
-    public void delete(String key) {
-
-    }
-
-    /**
-     * Define a quantidade de registros possíveis de serem armazenados baseado no tamanho do arquivo
-     * @param size Tamanho do arquivo em bytes
-     */
-    public void setSizeOfFile(long size) {
-        this.maxRecordsInFile = size / Record.bufferSize;
+    public boolean delete(String key) {
+        boolean deleted = false;
+        Record record = getValue(key);
+        try {
+            if (record != null) {
+                record.setDeleted(true);
+                randomAccessFile.seek(hash(key) * Record.bufferSize);
+                randomAccessFile.write(record.getBytes());
+                deleted = true;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return deleted;
     }
 }

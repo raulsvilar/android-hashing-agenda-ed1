@@ -13,15 +13,17 @@ class Record implements Serializable{
     static final int bufferSize = 100;
     private String name;
     private String number;
+    private boolean deletedFlag;
 
     /**
      * Cria um Record a partir de array de bytes
      * @param bytes Array de bytes utilizado para construir o Record
      */
-    public Record(byte[] bytes) {
+    Record(byte[] bytes) {
         ByteBuffer buffer = ByteBuffer.wrap(bytes);
         this.name = getStringFromByteBuffer(buffer);
         this.number = getStringFromByteBuffer(buffer);
+        this.deletedFlag = buffer.getInt() == 1;
     }
 
     /**
@@ -32,6 +34,7 @@ class Record implements Serializable{
     Record(String name, String number) {
         this.name = name;
         this.number = number;
+        this.deletedFlag = false;
     }
 
     /**
@@ -58,11 +61,20 @@ class Record implements Serializable{
         return new String(bytes);
     }
 
-    public byte[] getBytes() {
+    byte[] getBytes() {
         ByteBuffer bf = ByteBuffer.allocate(bufferSize);
         addStringInByteBuffer(bf, name);
         addStringInByteBuffer(bf, number);
+        bf.putInt(isDeleted()?1:0);
         return bf.array();
+    }
+
+    boolean isDeleted() {
+        return deletedFlag;
+    }
+
+    void setDeleted(boolean deleted) {
+        this.deletedFlag = deleted;
     }
 
     public String getName() {

@@ -31,5 +31,5 @@ interface BaseHashing {
      * Remove uma entrada da tabela
      * @param key Chave do registro a ser removido
      */
-    void delete(String key);
+    boolean delete(String key);
 }
