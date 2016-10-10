@@ -96,7 +96,26 @@
 
     </LinearLayout>
 
+    <TextView
+        android:id="@+id/max_items_textView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/max_contacts"/>
 
-
+    <TextView
+        android:id="@+id/inserted_items_textView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/inserted_items"/>
+    <TextView
+        android:id="@+id/deleted_items_textView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/deleted_items"/>
+    <TextView
+        android:id="@+id/colisions_textView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/colisions"/>
 
 </LinearLayout>

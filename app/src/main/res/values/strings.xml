@@ -2,4 +2,13 @@
     <string name="app_name">AgendaHashing</string>
     
     <string name="data_file">database.data</string>
+    <string name="config_preferences">config</string>
+    <string name="config_first_open">first_open</string>
+    <string name="config_inserted_items">inserted_items</string>
+    <string name="config_deleted_items">deleted_items</string>
+    <string name="config_colisions">colisions</string>
+    <string name="max_contacts">Qunatidade máxima: </string>
+    <string name="inserted_items">Items Inseridos: </string>
+    <string name="deleted_items">Items Deletados: </string>
+    <string name="colisions">Colisões: </string>
 </resources>
