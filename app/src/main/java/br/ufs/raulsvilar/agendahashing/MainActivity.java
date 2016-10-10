@@ -143,7 +143,7 @@ public class MainActivity extends AppCompatActivity {
                         public void onClick(DialogInterface dialogInterface, int which) {
                             try {
                                 hashingJava = new HashingJava(new File(getExternalFilesDir(null),
-                                        getString(R.string.data_file_mock)), 118481300);
+                                        getString(R.string.data_file_mock)), 1076800);
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }
@@ -167,15 +167,12 @@ public class MainActivity extends AppCompatActivity {
         }
         @Override
         protected void onPreExecute() {
-    //        progress = ProgressDialog.show(mContext, "Carregando", "A tabela hash está sendo" +
-    //                " alimentada por um arquivo de "+file.getTotalSpace()+ " bytes");
-     //       progress.setMax(1184713);
             progress = new ProgressDialog(mContext);
             progress.setTitle("Carregando");
             progress.setMessage("A tabela hash está sendo" +
-                    " alimentada por um arquivo de "+file.getTotalSpace()+ " bytes");
+                    " alimentada por um arquivo");
             progress.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-            progress.setMax(1184713);
+            progress.setMax(10668);
             progress.setCancelable(false);
             progress.show();
         }
