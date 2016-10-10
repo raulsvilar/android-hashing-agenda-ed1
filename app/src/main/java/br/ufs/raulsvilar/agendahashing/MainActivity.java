@@ -43,9 +43,11 @@ public class MainActivity extends AppCompatActivity {
     public void adicionar(View view) {
         TextInputEditText editTextNome = (TextInputEditText) findViewById(R.id.edit_adicionar_nome);
         TextInputEditText editTextNumero = (TextInputEditText) findViewById(R.id.edit_adicionar_numero);
-        hashingJava.add(editTextNome.getText().toString(), editTextNumero.getText().toString());
         editTextNome.getText().clear();
         editTextNumero.getText().clear();
+        if (hashingJava.add(editTextNome.getText().toString(), editTextNumero.getText().toString()))
+            Toast.makeText(getApplicationContext(),"Contato adicionado", Toast.LENGTH_SHORT).show();
+        else Toast.makeText(getApplicationContext(),"Capacidade máxima atingida", Toast.LENGTH_SHORT).show();
     }
 
     private void criarDialog(String title, String message, boolean withDelete) {
