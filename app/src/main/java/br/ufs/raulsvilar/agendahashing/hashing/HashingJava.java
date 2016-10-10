@@ -46,7 +46,7 @@ public class HashingJava implements BaseHashing{
         long h = 0;
         for (int i = 0; i < s.length(); i++)
             h = h * (65599) + s.charAt(i);
-        return h % maxRecordsInFile;
+        return (h & 0x7fffffff) % maxRecordsInFile;
     }
 
     @Override

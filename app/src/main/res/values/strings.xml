@@ -2,6 +2,7 @@
     <string name="app_name">AgendaHashing</string>
     
     <string name="data_file">database.data</string>
+    <string name="data_file_mock">database-mock.data</string>
     <string name="config_preferences">config</string>
     <string name="config_first_open">first_open</string>
     <string name="config_inserted_items">inserted_items</string>
