@@ -13,6 +13,9 @@ import java.io.RandomAccessFile;
 
 public class HashingJava implements BaseHashing{
 
+    private int insetedItems;
+    private int deletedItems;
+    private int colisions;
     private long maxRecordsInFile;
     private RandomAccessFile randomAccessFile;
 
@@ -24,6 +27,15 @@ public class HashingJava implements BaseHashing{
      * @throws IOException
      */
     public HashingJava(File file, long sizeOfFile) throws IOException {
+        maxRecordsInFile = sizeOfFile/Record.bufferSize;
+        randomAccessFile = new RandomAccessFile(file, "rwd");
+        randomAccessFile.setLength(sizeOfFile);
+    }
+
+    public HashingJava(File file, long sizeOfFile, int insertedItems, int deletedItems, int colisions) throws IOException{
+        this.deletedItems = deletedItems;
+        this.insetedItems = insertedItems;
+        this.colisions = colisions;
         maxRecordsInFile = sizeOfFile/Record.bufferSize;
         randomAccessFile = new RandomAccessFile(file, "rwd");
         randomAccessFile.setLength(sizeOfFile);
@@ -51,12 +63,17 @@ public class HashingJava implements BaseHashing{
                 record = new Record(data);
                 if (TextUtils.isEmpty(record.getName()) ||
                         (!TextUtils.isEmpty(record.getName()) && record.isDeleted())) {
+                    if (record.isDeleted()) deletedItems--;
                     record = new Record(key, value);
                     randomAccessFile.seek(randomAccessFile.getFilePointer()-Record.bufferSize);
                     randomAccessFile.write(record.getBytes());
                     isAdded = true;
+                    insetedItems++;
                     break;
-                } else index = (index + 1) % maxRecordsInFile;
+                } else {
+                    index = (index + 1) % maxRecordsInFile;
+                    colisions++;
+                }
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -98,10 +115,28 @@ public class HashingJava implements BaseHashing{
                 randomAccessFile.seek(randomAccessFile.getFilePointer()-Record.bufferSize);
                 randomAccessFile.write(record.getBytes());
                 deleted = true;
+                deletedItems++;
+                insetedItems--;
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
         return deleted;
+    }
+
+    public int getInsetedItems() {
+        return insetedItems;
+    }
+
+    public int getDeletedItems() {
+        return deletedItems;
+    }
+
+    public int getColisions() {
+        return colisions;
+    }
+
+    public long getMaxRecordsInFile() {
+        return maxRecordsInFile;
     }
 }
