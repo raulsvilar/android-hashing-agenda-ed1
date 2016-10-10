@@ -75,9 +75,9 @@ public class HashingJava implements BaseHashing{
                 randomAccessFile.seek(index * Record.bufferSize);
                 randomAccessFile.read(data);
                 record = new Record(data);
-                if (!TextUtils.isEmpty(record.getName()) && record.getName().equals(key)) {
+                if (!TextUtils.isEmpty(record.getName()) && record.getName().equals(key) && !record.isDeleted()) {
                     break;
-                } else if (TextUtils.isEmpty(record.getName())) {
+                } else if (TextUtils.isEmpty(record.getName()) || record.isDeleted()) {
                     record = null;
                     break;
                 } else index = (index + 1) % maxRecordsInFile;

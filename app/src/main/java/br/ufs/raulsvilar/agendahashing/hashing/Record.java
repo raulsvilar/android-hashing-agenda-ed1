@@ -7,7 +7,7 @@ import java.nio.ByteBuffer;
  * Created by raulsvilar on 06/10/16.
  */
 
-class Record implements Serializable{
+public class Record implements Serializable{
 
     static final long serialVersionUID = 25L;
     static final int bufferSize = 100;
