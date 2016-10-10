@@ -1,12 +1,11 @@
 package br.ufs.raulsvilar.agendahashing.hashing;
 
-import android.content.Context;
+import android.text.TextUtils;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 
-import br.ufs.raulsvilar.agendahashing.R;
 
 /**
  * Created by raulsvilar on 05/10/16.
@@ -39,49 +38,53 @@ public class HashingJava implements BaseHashing{
     }
 
     @Override
-    public void add(String key, String value) {
-        boolean canStop = false;
+    public boolean add(String key, String value) {
+        boolean isAdded = false;
         byte[] data = new byte[Record.bufferSize];
         Record record;
         long index = hash(key);
+        long firstIndex = index;
         do {
             try {
                 randomAccessFile.seek(index * Record.bufferSize);
                 randomAccessFile.read(data);
                 record = new Record(data);
-                if (record.getName() == null ||
-                        (record.getName() != null && record.isDeleted())) {
+                if (TextUtils.isEmpty(record.getName()) ||
+                        (!TextUtils.isEmpty(record.getName()) && record.isDeleted())) {
                     record = new Record(key, value);
+                    randomAccessFile.seek(randomAccessFile.getFilePointer()-Record.bufferSize);
                     randomAccessFile.write(record.getBytes());
-                    canStop = true;
+                    isAdded = true;
+                    break;
                 } else index = (index + 1) % maxRecordsInFile;
             } catch (Exception e) {
                 e.printStackTrace();
             }
-        } while (canStop);
+        } while (firstIndex != index);
+        return isAdded;
     }
 
     @Override
     public Record getValue(String key) {
         long index = hash(key);
+        long firstIndex = index;
         Record record = null;
-        boolean canStop = false;
         byte[] data = new byte[Record.bufferSize];
         do {
             try {
                 randomAccessFile.seek(index * Record.bufferSize);
                 randomAccessFile.read(data);
                 record = new Record(data);
-                if (record.getName() != null && record.getName().equals(key)) {
-                    canStop = true;
-                } else if (record.getName() == null) {
+                if (!TextUtils.isEmpty(record.getName()) && record.getName().equals(key)) {
+                    break;
+                } else if (TextUtils.isEmpty(record.getName())) {
                     record = null;
-                    canStop = true;
+                    break;
                 } else index = (index + 1) % maxRecordsInFile;
             } catch (Exception e) {
                 e.printStackTrace();
             }
-        } while (canStop);
+        } while (firstIndex != index);
         return record;
     }
 
@@ -92,7 +95,7 @@ public class HashingJava implements BaseHashing{
         try {
             if (record != null) {
                 record.setDeleted(true);
-                randomAccessFile.seek(hash(key) * Record.bufferSize);
+                randomAccessFile.seek(randomAccessFile.getFilePointer()-Record.bufferSize);
                 randomAccessFile.write(record.getBytes());
                 deleted = true;
             }

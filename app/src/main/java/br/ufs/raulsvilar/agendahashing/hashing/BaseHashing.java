@@ -18,7 +18,7 @@ interface BaseHashing {
      * @param key Chave do valor a ser armazenado
      * @param value Valor a ser armazenado
      */
-    void add(String key, String value);
+    boolean add(String key, String value);
 
     /**
      * Recupera um registro da tabela por meio da chave
