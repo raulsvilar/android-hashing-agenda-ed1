@@ -56,6 +56,7 @@ public class MainActivity extends AppCompatActivity {
             criarDialog("Contato não encontrado", "O contato não existe ou nome não foi digitado corretamente", false);
         } else {
             criarDialog("Contato", String.format("Nome: %s\nNúmero: %s", record.getName(), record.getNumber()), true);
+            editText.getText().clear();
         }
     }
 
