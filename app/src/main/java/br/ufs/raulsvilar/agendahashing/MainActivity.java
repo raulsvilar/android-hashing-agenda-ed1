@@ -72,7 +72,6 @@ public class MainActivity extends AppCompatActivity {
             criarDialog("Contato não encontrado", "O contato não existe ou nome não foi digitado corretamente", false);
         } else {
             criarDialog("Contato", String.format("Nome: %s\nNúmero: %s", record.getName(), record.getNumber()), true);
-            editText.getText().clear();
         }
     }
 
@@ -92,14 +91,21 @@ public class MainActivity extends AppCompatActivity {
         final AlertDialog.Builder dialog = new AlertDialog.Builder(this)
                 .setTitle(title)
                 .setMessage(message)
-                .setPositiveButton("OK",null);
+                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        editText.getText().clear();
+                    }
+                });
         if (withDelete)
             dialog.setNeutralButton("Deletar", new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialogInterface, int i) {
-                    if (hashingJava.delete(editText.getText().toString()))
-                        Toast.makeText(dialog.getContext(),"Contato deletado",
+                    if (hashingJava.delete(editText.getText().toString())) {
+                        Toast.makeText(dialog.getContext(), "Contato deletado",
                                 Toast.LENGTH_SHORT).show();
+                        editText.getText().clear();
+                    }
                     else Toast.makeText(dialog.getContext(),"Contato não deletado",
                             Toast.LENGTH_SHORT).show();
                     updateStatistics();

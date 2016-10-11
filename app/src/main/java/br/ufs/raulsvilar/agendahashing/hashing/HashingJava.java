@@ -83,6 +83,7 @@ public class HashingJava implements BaseHashing{
 
     @Override
     public Record getValue(String key) {
+        boolean haveColision = false;
         long index = hash(key);
         long firstIndex = index;
         Record record = null;
@@ -97,11 +98,15 @@ public class HashingJava implements BaseHashing{
                 } else if (TextUtils.isEmpty(record.getName()) || record.isDeleted()) {
                     record = null;
                     break;
-                } else index = (index + 1) % maxRecordsInFile;
+                } else {
+                    index = (index + 1) % maxRecordsInFile;
+                    haveColision = true;
+                }
             } catch (Exception e) {
                 e.printStackTrace();
             }
         } while (firstIndex != index);
+        if (firstIndex == index && haveColision) record = null;
         return record;
     }
 
