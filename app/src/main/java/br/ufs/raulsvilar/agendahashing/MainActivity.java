@@ -1,14 +1,19 @@
 package br.ufs.raulsvilar.agendahashing;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.annotation.RequiresPermission;
 import android.support.design.widget.TextInputEditText;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
@@ -17,8 +22,10 @@ import android.widget.Toast;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.Locale;
 
 import br.ufs.raulsvilar.agendahashing.hashing.HashingJava;
@@ -27,6 +34,7 @@ import br.ufs.raulsvilar.agendahashing.hashing.Record;
 public class MainActivity extends AppCompatActivity {
 
     private static final int PICKFILE_REQUEST_CODE = 945;
+    private static final int READ_STOREAGE_PERMISSION_REQUEST_CODE = 814;
     HashingJava hashingJava;
     SharedPreferences preferences;
 
@@ -49,7 +57,7 @@ public class MainActivity extends AppCompatActivity {
                 int colisions = preferences.getInt(getString(R.string.colisions), 0);
                 hashingJava = new HashingJava(new File(getExternalFilesDir(null),
                         getString(R.string.data_file)), 1048576,
-                        inserted_items,deleted_items,colisions);
+                        inserted_items, deleted_items, colisions);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -75,8 +83,7 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(this, "Contato adicionado", Toast.LENGTH_SHORT).show();
             editTextNome.getText().clear();
             editTextNumero.getText().clear();
-        }
-        else Toast.makeText(this,"Capacidade máxima atingida", Toast.LENGTH_SHORT).show();
+        } else Toast.makeText(this, "Capacidade máxima atingida", Toast.LENGTH_SHORT).show();
         updateStatistics();
     }
 
@@ -122,10 +129,30 @@ public class MainActivity extends AppCompatActivity {
                 hashingJava.getMaxRecordsInFile()));
     }
 
-    public void carregarContatos(View view) {
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        switch (requestCode) {
+            case READ_STOREAGE_PERMISSION_REQUEST_CODE:
+                pickFile();
+                break;
+        }
+    }
+
+    private void pickFile() {
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-        intent.setType("file/*");
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType("*/*");
         startActivityForResult(intent, PICKFILE_REQUEST_CODE);
+    }
+
+    @RequiresPermission(Manifest.permission.READ_EXTERNAL_STORAGE)
+    public void carregarContatos(View view) {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+                        READ_STOREAGE_PERMISSION_REQUEST_CODE);
+        } else pickFile();
     }
 
     @Override
@@ -142,12 +169,17 @@ public class MainActivity extends AppCompatActivity {
                         @Override
                         public void onClick(DialogInterface dialogInterface, int which) {
                             try {
+                                File file = File.createTempFile("temp","data");
+                                FileInputStream fis = new FileInputStream(file);
                                 hashingJava = new HashingJava(new File(getExternalFilesDir(null),
                                         getString(R.string.data_file_mock)), 1076800);
-                            } catch (IOException e) {
+
+                                new AsyncLoadContact(dialog.getContext(), getContentResolver()
+                                        .openInputStream(data.getData())).execute();
+                            } catch (Exception e) {
                                 e.printStackTrace();
                             }
-                            new AsyncLoadContact(dialog.getContext(),new File(data.getData().getPath())).execute();
+
                         }
                     }).show();
                 }
@@ -159,11 +191,11 @@ public class MainActivity extends AppCompatActivity {
 
         private Context mContext;
         private ProgressDialog progress;
-        private File file;
+        private InputStream inputStream;
 
-        AsyncLoadContact(Context context, File file) {
+        AsyncLoadContact(Context context, InputStream inputStream) {
             this.mContext = context;
-            this.file = file;
+            this.inputStream = inputStream;
         }
         @Override
         protected void onPreExecute() {
@@ -185,7 +217,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected Void doInBackground(Void... params) {
             try {
-                BufferedReader br = new BufferedReader(new FileReader(file));
+                BufferedReader br = new BufferedReader(new InputStreamReader(inputStream));
                 boolean arquivoCheio = false;
                 int count = 0;
                 String line;
